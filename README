@@ -1,0 +1,45 @@
+Project 2: jtar
+---------------
+The goal of this project is to recreate the Linux tar command for 
+compressing multiple files and directories, while preserving their
+timestamps, permissions, and data.
+
+For the implementation, I took in the command line arguements from the user.
+The only valid options should be --help, -cf, -tf, and -xf. This program will
+check each file listed in -cf to check if they exist before trying to compress them.
+I used the provided File class to create File objects which contained each file's
+name, timestamp, size, and permissions. 
+
+-cf:
+	I took each file and sent it into a function that creates File objects, 
+	and pushed those to a vector. Once in a vector, the files were pushed to 
+        another function which recursively checked each sub-directory. This was 
+	accomplished by using the C++ 17 filesystem library. Once I obtained all File 
+	objects, I pushed each from the vector into the binary file. If the object was
+	not a directory, I also had to push the file's content to the binary file. 
+	This was done by using fstream.read(content, size) and reading in all the 
+	file content into a char* of size File.size(). This was then written to the 
+	binary file and the pointer was in the right place for the next object.
+
+-tf:
+	To get the correct output for tf, I first started by reading in the number
+	of files in the binary file. Once this was obtained, I created a for-loop
+	to iterate each entry in the binary file. If the entry was a file, not a 
+	directory, I had to seekg past the file's content to obtain the next
+	record's name. This was done by using: 
+	fstream.seekg(stoi(File.getSize()), ios::cur);
+	After all records' names were printed, I closed the fstream.
+
+-xf:
+	For xf, I again pulled out the number of files in the binary file, and
+	iterated through the entries in the file. I checked if it was a file,
+	if it was, I used touch -t to create the file with it's correct timestamp.
+	I then used fstream.read(fileContent, size); to pull in the file's content
+	from the binary file to write out to the given file entry. If it was a 
+	directory, I first checked if it already existed (e.g. someone creating
+	an archive, but not deleting the original files). If it not, I used
+	mkdir to create the folder and touch -t to set the timestamp. I then
+	used chmod outside of the conditionals to set the protection modes
+	for both files and directories.
+
+This program checks for any invalid files, as well as files not existing to begin with.
